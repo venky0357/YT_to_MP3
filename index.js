@@ -1,37 +1,36 @@
-const express = require('express');
-const ytdl = require('ytdl-core');
-const cors = require('cors');
-
+const express = require("express");
+const ytdl = require("ytdl-core");
+const ffmpeg = require("fluent-ffmpeg");
 const app = express();
-const port = process.env.PORT || 3000;
 
-app.use(cors());
+app.get("/api/audio", async (req, res) => {
+  const videoId = req.query.videoId;
 
-app.get('/api/yt-to-mp3', async (req, res) => {
-  const videoUrl = req.query.url;
-  if (!videoUrl) {
-    return res.status(400).json({ error: 'Missing YouTube URL' });
+  if (!videoId) {
+    return res.status(400).json({ error: "Missing videoId parameter" });
   }
+
+  const videoURL = `https://www.youtube.com/watch?v=${videoId}`;
 
   try {
-    const info = await ytdl.getInfo(videoUrl);
+    const info = await ytdl.getInfo(videoURL);
+    const title = info.videoDetails.title.replace(/[^\w\s]/gi, "");
 
-    const audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
-    const bestAudio = ytdl.chooseFormat(audioFormats, { quality: 'highestaudio' });
+    res.setHeader("Content-Disposition", `attachment; filename="${title}.mp3"`);
+    res.setHeader("Content-Type", "audio/mpeg");
 
-    if (!bestAudio || !bestAudio.url) {
-      return res.status(500).json({ error: 'No playable audio stream found' });
-    }
+    const audioStream = ytdl(videoURL, { quality: "highestaudio" });
 
-    res.json({
-      audio_url: bestAudio.url
-    });
+    ffmpeg(audioStream)
+      .audioBitrate(128)
+      .format("mp3")
+      .pipe(res, { end: true });
+
   } catch (err) {
-    console.error('Error extracting audio:', err.message);
-    res.status(500).json({ error: 'Failed to get audio URL' });
+    console.error(err);
+    res.status(500).json({ error: "Failed to process video" });
   }
 });
 
-app.listen(port, () => {
-  console.log(`🚀 Server running on http://localhost:${port}`);
-});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
