@@ -1,36 +1,46 @@
-const express = require("express");
-const ytdl = require("ytdl-core");
-const ffmpeg = require("fluent-ffmpeg");
+const express = require('express');
+const { spawn } = require('child_process');
 const app = express();
+const PORT = 3000;
 
-app.get("/api/audio", async (req, res) => {
-  const videoId = req.query.videoId;
+app.get('/stream/:videoId', (req, res) => {
+  const { videoId } = req.params;
+  const url = `https://www.youtube.com/watch?v=${videoId}`;
 
-  if (!videoId) {
-    return res.status(400).json({ error: "Missing videoId parameter" });
-  }
+  res.setHeader('Content-Type', 'audio/mpeg');
 
-  const videoURL = `https://www.youtube.com/watch?v=${videoId}`;
+  const ytdlp = spawn('yt-dlp', [
+    '-f', 'bestaudio',
+    '-x',
+    '--audio-format', 'mp3',
+    '--audio-quality', '0',
+    '-o', '-', // send output to stdout
+    url
+  ]);
 
-  try {
-    const info = await ytdl.getInfo(videoURL);
-    const title = info.videoDetails.title.replace(/[^\w\s]/gi, "");
+  // Pipe yt-dlp's stdout (audio) directly to response
+  ytdlp.stdout.pipe(res);
 
-    res.setHeader("Content-Disposition", `attachment; filename="${title}.mp3"`);
-    res.setHeader("Content-Type", "audio/mpeg");
+  ytdlp.stderr.on('data', (data) => {
+    console.error(`stderr: ${data}`);
+  });
 
-    const audioStream = ytdl(videoURL, { quality: "highestaudio" });
+  ytdlp.on('error', (err) => {
+    console.error('yt-dlp failed to start:', err);
+    res.status(500).send('Internal Server Error');
+  });
 
-    ffmpeg(audioStream)
-      .audioBitrate(128)
-      .format("mp3")
-      .pipe(res, { end: true });
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to process video" });
-  }
+  ytdlp.on('close', (code) => {
+    if (code !== 0) {
+      console.error(`yt-dlp exited with code ${code}`);
+    }
+  });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+app.get('/', (req, res) => {
+  res.send('YouTube to MP3 streaming API is running.');
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
+});
