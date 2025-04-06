@@ -1,5 +1,6 @@
 const express = require('express');
 const { spawn } = require('child_process');
+const path = require('path');
 const app = express();
 const PORT = 3000;
 
@@ -10,15 +11,15 @@ app.get('/stream/:videoId', (req, res) => {
   res.setHeader('Content-Type', 'audio/mpeg');
 
   const ytdlp = spawn('yt-dlp', [
+    '--cookies', path.join(__dirname, 'cookies.txt'), // ✅ using the cookie file
     '-f', 'bestaudio',
     '-x',
     '--audio-format', 'mp3',
     '--audio-quality', '0',
-    '-o', '-', // send output to stdout
+    '-o', '-', // stream to stdout
     url
   ]);
 
-  // Pipe yt-dlp's stdout (audio) directly to response
   ytdlp.stdout.pipe(res);
 
   ytdlp.stderr.on('data', (data) => {
