@@ -17,9 +17,7 @@ app.get('/api/yt-to-mp3', async (req, res) => {
     const info = await ytdl.getInfo(videoUrl);
 
     const audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
-    const bestAudio = audioFormats.find(
-      format => format.mimeType?.includes('audio/webm') || format.mimeType?.includes('audio/mp4')
-    );
+    const bestAudio = ytdl.chooseFormat(audioFormats, { quality: 'highestaudio' });
 
     if (!bestAudio || !bestAudio.url) {
       return res.status(500).json({ error: 'No playable audio stream found' });
@@ -29,7 +27,7 @@ app.get('/api/yt-to-mp3', async (req, res) => {
       audio_url: bestAudio.url
     });
   } catch (err) {
-    console.error('Error extracting audio:', err);
+    console.error('Error extracting audio:', err.message);
     res.status(500).json({ error: 'Failed to get audio URL' });
   }
 });
