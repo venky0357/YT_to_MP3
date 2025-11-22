@@ -29,11 +29,10 @@ def get_audio_url(q: str = Query(..., description="Search query")):
     try:
         command = [
             "yt-dlp",
-            "--cookies", "cookies.txt",
-            # 🔴 IMPORTANT: audio-only formats only, no /best fallback
+            "--cookies", "app/cookies.txt",
             "-f", "bestaudio[acodec!=none]/bestaudio",
-            "-g",                      # --get-url
-            f"ytsearch1:{q}",          # first search result
+            "-g",
+            f"ytsearch1:{q}",
         ]
 
         result = subprocess.run(
@@ -53,14 +52,7 @@ def get_audio_url(q: str = Query(..., description="Search query")):
                 },
             )
 
-        lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
-        if not lines:
-            return JSONResponse(
-                status_code=500,
-                content={"error": "yt-dlp returned no URL", "stderr": result.stderr.strip()},
-            )
-
-        url = lines[0]  # this will be an AUDIO stream URL
+        url = result.stdout.strip().split("\n")[0]
         return {"url": url}
 
     except Exception as e:
