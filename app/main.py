@@ -18,7 +18,6 @@
 
 #     except Exception as e:
 #         return JSONResponse(status_code=500, content={"error": str(e)})
-
 from fastapi import FastAPI, Query
 from fastapi.responses import JSONResponse
 import subprocess
@@ -31,9 +30,10 @@ def get_audio_url(q: str = Query(..., description="Search query")):
         command = [
             "yt-dlp",
             "--cookies", "cookies.txt",
-            "-f", "bestaudio/best",     # <– fallback to best if bestaudio fails
-            "-g",                       # <– same as --get-url
-            f"ytsearch1:{q}",           # <– only first search result
+            # 🔴 IMPORTANT: audio-only formats only, no /best fallback
+            "-f", "bestaudio[acodec!=none]/bestaudio",
+            "-g",                      # --get-url
+            f"ytsearch1:{q}",          # first search result
         ]
 
         result = subprocess.run(
@@ -44,7 +44,6 @@ def get_audio_url(q: str = Query(..., description="Search query")):
         )
 
         if result.returncode != 0:
-            # Return both stdout & stderr so you can debug easily
             return JSONResponse(
                 status_code=500,
                 content={
@@ -61,7 +60,7 @@ def get_audio_url(q: str = Query(..., description="Search query")):
                 content={"error": "yt-dlp returned no URL", "stderr": result.stderr.strip()},
             )
 
-        url = lines[0]
+        url = lines[0]  # this will be an AUDIO stream URL
         return {"url": url}
 
     except Exception as e:
