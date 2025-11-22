@@ -28,7 +28,7 @@ app = FastAPI()
 def get_audio_url(q: str = Query(..., description="Search query")):
     try:
         command = [
-            "yt-dlp",
+            "python3", "-m", "yt_dlp",
             "--cookies", "app/cookies.txt",
             "-f", "bestaudio[acodec!=none]/bestaudio",
             "-g",
