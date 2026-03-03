@@ -29,9 +29,8 @@ def get_audio_url(q: str = Query(..., description="Search query")):
     try:
         command = [
             "yt-dlp",
-            "-f", "bestaudio/best",
+            "-f", "bestaudio",
             "--cookies", "cookies.txt",
-            "--extractor-args",
             "--get-url",
             f"ytsearch1:{q}"
         ]
