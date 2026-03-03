@@ -31,7 +31,7 @@ def get_audio_url(q: str = Query(..., description="Search query")):
             "yt-dlp",
             "-f", "bestaudio/best",
             "--cookies", "cookies.txt",
-            "--extractor-args", "youtube:player_client=android",
+            "--extractor-args",
             "--get-url",
             f"ytsearch1:{q}"
         ]
