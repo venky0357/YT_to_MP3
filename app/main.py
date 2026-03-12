@@ -59,8 +59,6 @@
 
 #     except Exception as e:
 #         return JSONResponse(status_code=500, content={"error": str(e)})
-
-
 from fastapi import FastAPI, Query
 from fastapi.responses import JSONResponse
 import subprocess
@@ -76,23 +74,29 @@ def run_ytdlp(command):
     )
 
 @app.get("/get-url")
-def get_audio_url(q: str = Query(..., description="Search query")):
+def get_audio_url(q: str = Query(...)):
     try:
         command = [
             "yt-dlp",
+            "--quiet",
+            "--no-warnings",
             "-f", "bestaudio",
             "--no-playlist",
             "--get-url",
-            "--quiet",
-            "--no-warnings",
+
+            # CRITICAL anti-bot flags
             "--extractor-args",
-            "youtube:player_client=android,ios,tv",
-            "--socket-timeout", "15",
-            "--retries", "5",
-            "--fragment-retries", "5",
-            "--skip-unavailable-fragments",
-            "--geo-bypass",
+            "youtube:player_client=android_creator,android_embedded,tv_embedded",
+
+            "--add-header",
+            "User-Agent:com.google.android.youtube/19.09.37 (Linux; U; Android 11)",
+
+            "--socket-timeout", "20",
+            "--retries", "10",
+            "--fragment-retries", "10",
+
             "--default-search", "ytsearch",
+
             q
         ]
 
@@ -109,7 +113,4 @@ def get_audio_url(q: str = Query(..., description="Search query")):
         return {"url": url}
 
     except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(e)}
-        )
+        return JSONResponse(status_code=500, content={"error": str(e)})
