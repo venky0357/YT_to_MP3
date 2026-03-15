@@ -77,7 +77,7 @@ def get_audio_url(q: str = Query(...)):
             "--get-url",
             f"ytsearch1:{q}"
         ]
-
+        
         result = subprocess.run(
             command,
             stdout=subprocess.PIPE,
