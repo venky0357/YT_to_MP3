@@ -4,21 +4,21 @@ const { spawn } = require("child_process");
 const app = express();
 
 app.get("/get-url", (req, res) => {
-    const q = req.query.q;
+    const url = req.query.q;
 
-    if (!q) {
-        return res.status(400).json({ error: "query missing" });
+    if (!url) {
+        return res.status(400).json({ error: "url missing" });
     }
 
-    const yt = spawn("python3", [
+    const yt = spawn("python", [
         "-m", "yt_dlp",
         "--cookies", "cookies.txt",
         "--force-ipv4",
         "--no-playlist",
-        "--extractor-args", "youtube:player_client=web_safari",
+        "--extractor-args", "youtube:player_client=android",
         "-f", "ba[ext=m4a]/ba/b",
         "--get-url",
-        `ytsearch1:${q}`
+        url
     ]);
 
     let output = "";
@@ -35,13 +35,8 @@ app.get("/get-url", (req, res) => {
             });
         }
 
-        const url = output.trim().split("\n")[0];
-
-        if (!url) {
-            return res.status(404).json({ error: "No audio URL found" });
-        }
-
-        res.json({ url });
+        const finalUrl = output.trim().split("\n")[0];
+        res.json({ url: finalUrl });
     });
 });
 
