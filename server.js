@@ -15,7 +15,6 @@ app.get("/get-url", (req, res) => {
         "--cookies", "cookies.txt",
         "--force-ipv4",
         "--no-playlist",
-        "--extractor-args", "youtube:player_client=android",
         "-f", "ba[ext=m4a]/ba/b",
         "--get-url",
         url
