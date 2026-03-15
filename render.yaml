@@ -4,8 +4,10 @@ services:
     runtime: python
     plan: free
     region: oregon
-    buildCommand: |
-      pip install --upgrade pip
-      pip install -U yt-dlp
-      pip install -r requirements.txt
+buildCommand: |
+    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+    apt-get install -y nodejs ffmpeg
+    pip install --upgrade pip
+    pip install -U yt-dlp
+    pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port 10000

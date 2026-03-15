@@ -71,9 +71,8 @@ def get_audio_url(q: str = Query(...)):
             "--cookies", "cookies.txt",
             "--force-ipv4",
             "--no-playlist",
-            "--extractor-args", "youtube:player_client=tv,web_safari",
-            "-f", "bestaudio/best",
-            "--no-check-certificates",
+            "--extractor-args", "youtube:player_client=web_safari",
+            "-f", "ba[ext=m4a]/ba/b",
             "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
             "--get-url",
             f"ytsearch1:{q}"
